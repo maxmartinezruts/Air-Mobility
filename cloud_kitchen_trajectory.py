@@ -3,6 +3,15 @@ import random
 import math
 import pygame
 import time
+# import osmnx as ox
+# G = ox.graph_from_place('Manhattan Island, New York City, New York, USA', network_type='drive')
+# ox.plot_graph(G)
+render = 0
+
+pos_drones = []
+for t in range(100000):
+    pos_drones.append([])
+g_t = 0
 
 # Returns dot product of two vectors
 def dotproduct(v1, v2):
@@ -44,13 +53,26 @@ def screen_to_cartesian(screen_pos):
 
 # Get weight cost of a point p
 def get_w(p):
+    # P contains 3 dimensions: x, y and t
     sigma = 0.3
     w = 0
 
     # Gaussian function to apply weight
     for bump in bumps:
-        w += 1 / (sigma * np.sqrt(2 * np.pi)) * np.exp(- (np.linalg.norm(bump - p)) ** 2 / (2 * sigma ** 2)) * 5
+        w += 1 / (sigma * np.sqrt(2 * np.pi)) * np.exp(- (np.linalg.norm(bump - p[:2])) ** 2 / (2 * sigma ** 2)) * 0
     w += 0.1
+    return w
+
+# Get weight cost of a point p
+def get_dynamic_w(p,t):
+    w = 0
+    sigma = 0.3
+
+    # P contains 3 dimensions: x, y and t
+    for pos in pos_drones[t]:
+        if np.linalg.norm(p-pos)<0.8:
+            w += 1 / (sigma * np.sqrt(2 * np.pi)) * np.exp(- (np.linalg.norm(pos - p)) ** 2 / (0.6 * sigma ** 2)) * 500
+
     return w
 
 
@@ -74,13 +96,10 @@ class Graph:
         # Choose random node
         cps = []
         pps = []
+        t_path = g_t
         for choice in range(1, len(self.path) - 1):
             cs = []
             ps = []
-            if choice == 1:
-                q = self.path[0].pos + np.array([0.1, 0])
-            else:
-                q = self.path[choice - 2].pos
             len_edge =np.linalg.norm(self.path[choice+1].pos - self.path[choice].pos)
 
             for k in range(int(len_edge)*10):
@@ -90,8 +109,8 @@ class Graph:
 
                 # specify which route to take into account
                 if True:
-                    c = self.get_edge_cost(self.path[choice - 1].pos, p) + self.get_edge_cost(p,
-                                                                                              self.path[choice + 1].pos)
+                    c = self.get_edge_cost(self.path[choice - 1].pos, p, t_path) + self.get_edge_cost(p,
+                                                                                              self.path[choice + 1].pos, t_path + np.linalg.norm(self.path[choice - 1].pos- p)*50)
                     cs.append(c)
                     ps.append(p)
             if len(cs) > 0:
@@ -100,6 +119,8 @@ class Graph:
                 path[choice] = Point(pt)
                 cps.append(self.get_path_cost(path))
                 pps.append(path)
+
+            t_path += np.linalg.norm(self.path[choice - 1].pos-self.path[choice].pos)*50   # Review, not sure if right
         if len(cps) > 0:
             self.path = pps[cps.index(min(cps))]
             self.reconstruct_path(np.array([0, 1, 0], dtype=int))
@@ -107,6 +128,7 @@ class Graph:
     def de_relax(self):
         cps = []
         pps = []
+        t_path = g_t
         for choice in range(0, len(self.path) - 1):
             # choice = random.randint(0,len(self.path)-2)
             cs = []
@@ -115,25 +137,31 @@ class Graph:
             for k in range(int(len_edge)*10):
                 delta = np.random.randn(2)/len(self.path)
                 p = self.path[choice].pos + (self.path[choice+1].pos - self.path[choice].pos)/len_edge*np.random.uniform(0,len_edge) + delta
-                pygame.draw.circle(screen, white, cartesian_to_screen(p), 3)
 
                 if True:
-                    c = self.get_edge_cost(self.path[choice].pos, p) + self.get_edge_cost(p, self.path[choice + 1].pos)
+                    c = self.get_edge_cost(self.path[choice].pos, p, t_path) + self.get_edge_cost(p, self.path[choice + 1].pos, t_path + np.linalg.norm(self.path[choice].pos- p)*50)
                     cs.append(c)
                     ps.append(p)
+            cl = min(int(t_path), 255)
+            c2 = min(int(t_path+len_edge*50), 255)
 
+            pygame.draw.circle(screen, (cl, cl, cl), cartesian_to_screen(self.path[choice].pos), 10)
+            pygame.draw.circle(screen, (c2, c2, c2), cartesian_to_screen(self.path[choice+1].pos), 10)
+
+            pygame.display.flip()
+            # time.sleep(0.01)
             if len(cs) > 0:
                 path = list(self.path)
                 path.insert(choice + 1, Point(ps[cs.index(min(cs))]))
                 cps.append(self.get_path_cost(path))
                 pps.append(path)
+            t_path += len_edge*50  # Review, not sure if right
+
         # pygame.display.flip()
         # time.sleep(1)
         if len(cps) > 0:
             self.path = pps[cps.index(min(cps))]
             self.reconstruct_path(np.array([1, 0, 0], dtype=int))
-
-
 
     def try_remove_worst(self):
         cs = []
@@ -151,11 +179,15 @@ class Graph:
 
     def get_path_cost(self, path):
         cost = 0
+        t_path = g_t
         for p in range(0, len(path) - 1):
-            cost += self.get_edge_cost(path[p].pos, path[p + 1].pos)
+
+            cost += self.get_edge_cost(path[p].pos, path[p + 1].pos, t_path)
+            t_path += np.linalg.norm(path[p].pos- path[p + 1].pos)*50
+
         return cost
 
-    def get_edge_cost(self, i, f):
+    def get_edge_cost(self, i, f, t_i):
         vec = f - i
         length = np.linalg.norm(vec)
         reps = int(length / 0.5) + 2
@@ -164,8 +196,8 @@ class Graph:
         for j in range(reps - 1):
             current = i + mults[j] * vec
             next = i + mults[j + 1] * vec
-            wi = weights[get_coor_by_pos(current)[0], get_coor_by_pos(current)[1]]
-            wf = weights[get_coor_by_pos(next)[0], get_coor_by_pos(next)[1]]
+            wi = weights[get_coor_by_pos(current)[0], get_coor_by_pos(current)[1]] + get_dynamic_w(current,int(t_i))
+            wf = weights[get_coor_by_pos(next)[0], get_coor_by_pos(next)[1]] + get_dynamic_w(next,int(t_i + length*50))
             cost += (wi + wf) / 2 * np.linalg.norm(current - next)
 
         return cost
@@ -184,14 +216,21 @@ class Graph:
         pygame.display.flip()
         return self.path
 
-
-
-
 # Drawing Board
 def draw():
+    global render
+    render +=1
     pygame.event.get()
     screen.fill((0, 0, 0))
-    screen.blit(image, (0, 0))
+    # screen.blit(image, (0, 0))
+    print(pos_drones[0])
+    print(pos_drones[1])
+    if render % 4 ==0:
+        for i in range(len(xs)):
+            for j in range(len(ys)):
+                w =  get_dynamic_w(np.array([xs[i], ys[j]]),g_t+100)
+                b = min(255, int(w * 100))
+                pygame.draw.circle(screen, (b, 0, 0), cartesian_to_screen(np.array([xs[i], ys[j]])), 3)
 
     for drone in drones:
         pygame.draw.circle(screen, green, cartesian_to_screen(drone.pos),  5)
@@ -230,6 +269,7 @@ def pick_kitchen(pos):
 # Class Drone
 class Drone:
     def __init__(self):
+        global pos_drones       # Maps t to pos
 
         # Set of states
         # 1. Available  - if drone is waiting in kitchen
@@ -249,14 +289,27 @@ class Drone:
         self.kitchen = random.choice(kitchens)
 
         # Number of iterations
-        self.recursion_depth = 25
+        self.recursion_depth = 15
 
         path = [Point(self.pos), Point(self.kitchen.pos)]
         graph = Graph(path)
-        for i in range(5):
+        for i in range(15):
             graph.search()
 
         self.path = graph.path[1:]
+
+        copypath = list(graph.path[1:])
+        copypos = np.array(list(self.pos))
+        # Add drone location in time to cost map
+        t = g_t
+        while len(copypath) > 0:
+            step = (copypath[0].pos - copypos) / (np.linalg.norm(copypath[0].pos - copypos) + 0.00001) / 50
+            copypos += step
+            print(copypos, t)
+            pos_drones[t].append(np.array(list(copypos)))
+            if np.linalg.norm(copypath[0].pos - copypos) < (4 / 50):
+                copypath.pop(0)
+            t+=1
 
     # Perform action
     def act(self):
@@ -350,7 +403,12 @@ n = 70
 xs = np.linspace(-8, 8, n)
 ys = np.linspace(-8, 8, n)
 np.random.seed(1)
-bumps = np.random.uniform(-6, 6, (50, 2))
+bumps = []
+for i in np.linspace(-6,6,9):
+    for j in np.linspace(-6,6,9):
+        bumps.append([i,j])
+bumps = np.array(bumps)
+bumps = np.random.uniform(-6,6,(50,2))
 weights = np.zeros((n, n))
 
 for i in range(len(xs)):
@@ -363,6 +421,7 @@ for i in range(len(xs)):
 pygame.image.save(screen, "geek.jpg")
 screen.fill((0, 0, 0))
 image = pygame.image.load('geek.jpg')
+# print(image)
 screen.blit(image, (0, 0))
 pygame.display.flip()
 
@@ -373,8 +432,8 @@ path = []
 
 # Define list of robots
 
-n_drones = 14
-n_kitchens = 2
+n_drones = 15
+n_kitchens = 3
 
 drones = []
 kitchens = []
@@ -390,9 +449,10 @@ t = 0
 # Start and continue simulation
 while True:
     t+=1
+    g_t +=1
 
     # Each 70 time steps create an order
-    if t%100 == 0:
+    if t%70 == 0:
 
         # New order from random kitchen (could be rejected if range is too large)
         order = Order()
