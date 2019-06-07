@@ -21,6 +21,8 @@ yellow = (255,255, 0)
 fpsClock = pygame.time.Clock()
 fps = 400
 
+
+
 # Convert coordinates form cartesian to screen coordinates (used to draw in pygame screen)
 def cartesian_to_screen(car_pos):
     factor = 0.021
@@ -42,13 +44,18 @@ def draw():
     pygame.event.get()
     screen.fill((0, 0, 0))
     # screen.blit(image, (0, 0))
-    if render % 4 ==0:
-        for i in range(len(cm.xs)):
-            for j in range(len(cm.ys)):
-                w =  cm.get_dynamic_w(np.array([cm.xs[i], cm.ys[j]]),env.tstep)
-                b = min(255, int(w * 100))
-                pygame.draw.circle(screen, (b, 0, 0), cartesian_to_screen(np.array([cm.xs[i], cm.ys[j]])), 3)
+    image = pygame.image.load('costmap.jpg')
+    screen.blit(image, (0, 0))
+    # if render % 1 ==0:
+    #     for i in range(len(cm.xs)):
+    #         for j in range(len(cm.ys)):
+    #             w =  cm.weights[i,j]
+    #             b = min(255, int(w * 100)-100)
+    #             pygame.draw.circle(screen, (b, 0, 0), cartesian_to_screen(np.array([cm.xs[i], cm.ys[j]])), 3)
 
+    for poly in cm.polygons:
+        if len(poly)>0:
+            pygame.draw.polygon(screen, (150,150,150), [cartesian_to_screen([pol[0],pol[1]]) for pol in poly],1)
     for drone in env.drones:
         pygame.draw.circle(screen, green, cartesian_to_screen(drone.pos),  5)
 
@@ -59,3 +66,12 @@ def draw():
         pygame.draw.circle(screen, white, cartesian_to_screen(order.pos),  5)
 
     pygame.display.flip()
+
+
+screen.fill((0, 0, 0))
+for i in range(env.n):
+    for j in range(env.n):
+        w = cm.weights[i,j]
+        b = min(255, int(w**3))*0.25
+        pygame.draw.circle(screen, (b, 0, 0), cartesian_to_screen(np.array([cm.xs[i], cm.ys[j]])), 3)
+pygame.image.save(screen, "costmap.jpg")

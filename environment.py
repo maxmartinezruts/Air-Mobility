@@ -11,7 +11,7 @@ class Environment:
         self.orders = []
 
         # Grid refinement (Spatial grid is N * N)
-        self.n = 30
+        self.n = 200
 
         # List containing all drones positions at all time
         self.pos_drones = []

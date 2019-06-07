@@ -1,12 +1,11 @@
 import numpy as np
-np.random.seed(5)
+np.random.seed(0)
 
 from environment import env
 from drone import Drone
 from order import Order
 from kitchen import Kitchen
 import visual as vs
-
 
 for t in range(100000):
     env.pos_drones.append([])
@@ -20,15 +19,18 @@ for i in range(n_kitchens):
 
 for i in range(n_drones):
     env.drones.append(Drone())
+vs.draw()
 
 for drone in env.drones:
     drone.set_path()
+    vs.draw()
+    print(env.drones.index(drone))
 
 # Start and continue simulation
 while True:
     env.tstep +=1
     # Each 700 time steps create an order
-    if env.tstep%700 == 0:
+    if env.tstep%7000 == 0:
 
         # New order from random kitchen (could be rejected if range is too large)
         order = Order()

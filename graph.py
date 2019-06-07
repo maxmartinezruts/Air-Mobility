@@ -7,6 +7,7 @@ from environment import env
 import helpers as hp
 
 
+
 # Class graph
 class Graph:
     def __init__(self, p):
@@ -32,15 +33,15 @@ class Graph:
 
             # Create a number of poits located in a 2D gaussian distribution located at the edge examined
             for k in range(int(len_edge)*10):
-                delta = np.random.randn(2)/len(self.path)
+                delta = np.random.randn(2)/len(self.path)*10
                 p = self.path[choice].pos + (self.path[choice+1].pos - self.path[choice].pos)/len_edge*np.random.uniform(0,len_edge) + delta
-
-                # Substitude examined point by generated point, evaluate the new cost of the path and save
-                path = list(self.path)
-                path[choice] = Point(p)
-                c = self.get_path_cost(path)
-                cs.append(c)
-                ps.append(p)
+                if not cm.intersects(p):
+                    # Substitude examined point by generated point, evaluate the new cost of the path and save
+                    path = list(self.path)
+                    path[choice] = Point(p)
+                    c = self.get_path_cost(path)
+                    cs.append(c)
+                    ps.append(p)
 
             # Select shift operation that leads to the lowest cost
             if len(cs) > 0:
@@ -67,15 +68,16 @@ class Graph:
 
             # Create a number of poits located in a 2D gaussian distribution located at the edge examined
             for k in range(int(len_edge)*10):
-                delta = np.random.randn(2)/len(self.path)
+                delta = np.random.randn(2)/len(self.path)*10
                 p = self.path[choice].pos + (self.path[choice+1].pos - self.path[choice].pos)/len_edge*np.random.uniform(0,len_edge) + delta
 
-                # Create generated point, evaluate the new cost of the path and save
-                path = list(self.path)
-                path.insert(choice + 1, Point(p))
-                c = self.get_path_cost(path)
-                cs.append(c)
-                ps.append(p)
+                if not cm.intersects(p):
+                    # Create generated point, evaluate the new cost of the path and save
+                    path = list(self.path)
+                    path.insert(choice + 1, Point(p))
+                    c = self.get_path_cost(path)
+                    cs.append(c)
+                    ps.append(p)
 
             # Select creation operation that leads to the lowest cost
             if len(cs) > 0:
@@ -105,7 +107,7 @@ class Graph:
             if min(cs) < self.get_path_cost(self.path):
                 choice = cs.index(min(cs)) + 1
                 self.path.pop(choice)
-                print(min(cs), self.get_path_cost(self.path))
+                # print(min(cs), self.get_path_cost(self.path))
                 self.reconstruct_path(np.array([1, 1, 1], dtype=int))
 
     # Returns cost of complete path

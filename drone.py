@@ -2,7 +2,7 @@ import numpy as np
 from environment import env
 from point import Point
 from graph import Graph
-
+import A_star as astar
 
 # Class Drone
 class Drone:
@@ -13,7 +13,8 @@ class Drone:
         # 3. Free       - if frone is flying not carrying an order
 
         # Cartesian position of the drone
-        self.pos = np.random.randn(2)*4
+
+        self.pos = np.random.uniform(-6,6,(2))
 
         # Start drone as free
         self.state = 'free'
@@ -30,11 +31,15 @@ class Drone:
 
         # Create path starting at drone position and ending at kitchen position
         path = [Point(self.pos), Point(self.kitchen.pos)]
-        graph = Graph(path)
+        graph = astar.Graph()
+        graph.prepare(astar.Node(self.pos, None, graph), astar.Node(self.kitchen.pos, None, graph))
+        graph.search()
 
-        # Find shorter paths
-        for i in range(self.recursion_depth):
-            graph.search()
+        # graph = Graph(path)
+        #
+        # # Find shorter paths
+        # for i in range(self.recursion_depth):
+        #     graph.search()
 
 
         self.path = graph.path[1:]
@@ -64,11 +69,16 @@ class Drone:
 
                 # Create path starting at drone position and ending at kitchen position
                 path = [Point(self.pos), Point(self.kitchen.pos)]
-                graph = Graph(path)
 
-                # Find shorter paths
-                for i in range(self.recursion_depth):
-                    graph.search()
+                graph = astar.Graph()
+                graph.prepare(astar.Node(self.pos, None, graph), astar.Node(self.kitchen.pos, None, graph))
+                graph.search()
+
+                # graph = Graph(path)
+                #
+                # # Find shorter paths
+                # for i in range(self.recursion_depth):
+                #     graph.search()
 
                 self.path = graph.path[1:]
 
@@ -103,11 +113,15 @@ class Drone:
 
         # Create path starting at drone position and ending at customer position
         path = [Point(self.pos), Point(order.pos)]
-        graph = Graph(path)
+        graph = astar.Graph()
+        graph.prepare(astar.Node(self.pos, None, graph), astar.Node(self.kitchen.pos, None, graph))
+        graph.search()
 
-        # Find shorter paths
-        for i in range(self.recursion_depth):
-            graph.search()
+        # graph = Graph(path)
+        #
+        # # Find shorter paths
+        # for i in range(self.recursion_depth):
+        #     graph.search()
 
 
         self.path = graph.path[1:]
@@ -118,13 +132,14 @@ class Drone:
 
 
     def navigate(self):
-        # Advance to target with a step lenght of 1/50
-        step = (self.path[0].pos - self.pos) / (np.linalg.norm(self.path[0].pos - self.pos)+0.000000000000001) / 50
-        self.pos += step
+        if len(self.path) > 0:
+            # Advance to target with a step lenght of 1/50
+            step = (self.path[0].pos - self.pos) / (np.linalg.norm(self.path[0].pos - self.pos)+0.000000000000001) / 50
+            self.pos += step
 
-        # If arrived to next point in path, pop point (so that path[0] will be the next point to pursue)
-        if np.linalg.norm(self.path[0].pos - self.pos) < (4/50):
-            self.path.pop(0)
+            # If arrived to next point in path, pop point (so that path[0] will be the next point to pursue)
+            if np.linalg.norm(self.path[0].pos - self.pos) < (4/50):
+                self.path.pop(0)
 
     def add_path_to_costmap(self, path, pos):
         # Add drone location in time to cost map
