@@ -55,21 +55,24 @@ map and the trajectory of the drone. To successfully achieve this, the cost map 
 points describing the cost at any position in the 2D map. By doing so, all points in the grid can be seen as
 nodes, and the drone can travel from one side of the map to the other by going thorough adjacent nodes.
 
-![alt text](http://url/to/img.png)
+<p align="center">
+  <img src="costmap_continuous.png" width="350" alt="accessibility text">
+   <img src="costmap_discrete.png" width="350" title="hover text">
 
-5
-Figure 5: Layer of cost Map (continuous model)
-containing buildings of a city (expensive areas are
-represented in red)
-Figure 6: Layer of Node grid (discrete model)
-containing buildings of a city (expensive nodes
-are represented in red)
+</p>
+
+
+Left: Layer of cost Map (continuous model) containing buildings of a city (expensive areas are represented in red)
+Right: Layer of Node grid (discrete model) containing buildings of a city (expensive nodes are represented in red)
+
+
 Connections between adjacent nodes are labeled as edges. As the cost of a path is not the cost of the
 finite number of points in the grid of the cost map, but rather the cost of going through these points, the
 cost is linked to the edges and not to the nodes by a parameter named weight. The weight of any edge
 containing two nodes is thereby the average of the cost of the two connecting nodes multiplied by the length
-of the edge. This is:
-W = L ∗ (C1 + C2) (1)
+of the edge. This is: W = L ∗ (C1 + C2) (1)
+
+
 Which can be seen as the cost of the intersection of a path going from point 1 to point 2 with the cost
 map. By using this relation, edges located in cheap areas of the cost map will have low weights and edges
 located in expensive areas of the cost map will have high weights.
@@ -89,43 +92,57 @@ cost map, A* algorithm will return the path which has minimum intersection with 
 most cost-effective path.
 
 An explanation of A* algorithm and its implementation will be developed in further research.
-6
+
 # Traffic congestion mitigation
 Traffic congestion is normally generated due to the high concentration of vehicles moving in chaotic directions.
 Unorganized movement congests the environment and circulation occurs slower. By grouping vehicles having
 similar directions close to each other, the space occupied by those vehicles is reduced and thereby there is
 more free space for circulation.
+
 Traffic lights in urban environments not only guarantee safety but also create clusters of vehicles, which
-helps reducing traffic congestion [12]. Roads are also structures that help cluster vehicles, and separating
+helps reducing traffic congestion. Roads are also structures that help cluster vehicles, and separating
 roads for vehicles having opposite directions is also a form of clustering by direction.
 It is therefore appealing to incorporate a technique to impose clustering patters to achieve congestion
-mitigation for air traffic pathfinding. In [9] the concepts of geofencing, geocasting and geovectoring are
+mitigation for air traffic pathfinding. In the paper'Geovectoring: Reducing Traffic Complexity to Increase the Capacity of UAV airspace' the concepts of geofencing, geocasting and geovectoring are
 introduced. Geofencing prevents drones to access certain areas. Geocasting enforces clusters of drones to
 travel having similar positions and geovectoring enforces clusters of drones to travel having similar directions.
 In 1986, Craig Reynolds created a computer program of coordinated animal motion such as bird flocks
-that would simulate different clustering patters thorough three behaviours; alignment, cohesion and separation. [1]
-Interestingly, these three behaviours align perfectly with the three concepts introduced in [9]. Geofencing
+that would simulate different clustering patters thorough three behaviours; alignment, cohesion and separation.
+
+Interestingly, these three behaviours align perfectly with the three concepts introduced in the paper mentioned earlier. Geofencing
 can be achieved by separation, which makes vehicles steer in opposite directions of obstacles encountered
 within a perception range (see Figure 7). Geocasting can be achieved by cohesion, which makes vehicles
 steer towards the average position of all other vehicles encountered in a perception range (see Figure 8).
 And geovectoring can be achieved by alignment, which makes vehicles steer towards the same direction as
 the average heading of all other vehicles encountered within a perception range (see Figure 9).
-Figure 7: Separation Figure 8: Cohesion Figure 9: Alignment
+
+<p align="center">
+  <img src="separation.png" width="200" alt="accessibility text">
+   <img src="cohesion.png" width="200" title="hover text">
+     <img src="alignment.png" width="200" title="hover text">
+</p>
+
+Left Separation 
+Center: Cohesion
+Right: Alignment
+
 The solution approached is to implement one more layer in the cost map that penalizes paths that induce traffic congestion and awards paths that reduce traffic congestion. The solution designed is to create
 a new layer in the cost map such that separation, cohesion and alignment are combined so that geofencing,
 geocasting and geovectoring are achieved. By doing so, clusters of drones maintaining separation, traveling
 next to each other and having similar headings are created. The extra cost layer is modeled as following:
+
 Separation: Dramatically penalize nodes in the cost map that are very close to a neighbour drone by
 including a limit radius. This radius varies depending on the relative orientation between drones. If drones
 are aligned to each other, collision is unlikely and reducing the limit radius will allow more cohesion. On the
-other hand, if drones have contrasted directions, collision is much more likely and therefore the limit radius
-7
-has to be larger.
+other hand, if drones have contrasted directions, collision is much more likely and therefore the limit radius has to be larger.
+
 Cohesion: award nodes in the cost map that are close to the average position of all drones within the
 perception radius. By doing so, geocasting can be achieved.
+
 Alignment: award nodes in the cost map that will lead to edges having similar direction to the average
 direction of all drones within a perception radius. By doing so, geovectored clusters can be formed and therefore space occupied by drones will dramatically decrease, meaning that there will be much more circulation
 space and therefore, less congestion.
+
 By varying the weight on the cost map of separation, cohesion and alignment in the cost map, different
 clustering patters can be achieved, and adapted to the circumstances. For example, if separation is predominant, the limit radius can be increased, or if congestion has to be drastically reduced, more weight will be
 carried by cohesion and alignment such that geovectored clusters are formed.
