@@ -1,20 +1,3 @@
-# Motivation
-
-With the world moving faster every day, the demand for services grows rapidly. In recent years we have
-seen a significant rise of interest in drone technology, as a means to allow our society to satisfy this demand.
-Drones will soon start to play a major role in our lives and they will change the urban landscape of cities as
-we know them.
-Drones, also know as unmanned aerial vehicles (UAVs), have been given a lot of attention for military
-use. However, the popularity of using drones for commercial purposes is rising every day. Remarkable
-advancements have been made in the area of drone-assisted parcel delivery as well as drone-assisted medical delivery, however, the potential of food delivery using drones has not been investigated thoroughly
-as of now.
-There is a number of potential benefits that could arise from the use of drones for food delivery. These
-could include the decrease and avoidance of traffic congestion, the possible decrease in labour costs
-and, last but not least, increased delivery speed.
-The aim of this paper is to present a feasible model for drone-assisted food delivery in urban areas and
-come up with a number of research questions to answer to allow for implementation of such a concept. In
-section 2, a brief overview of the concept is given. The three following sections, section 3, section 4 and
-section 5 give a more in-depth insight into different stages of the operation.
 
 # Urban airspace model
 In an urban environment, pathfinding (or routing) is a crucial task for delivery. Any drone has to be able to
@@ -26,6 +9,9 @@ with restricted zones such as buildings. The latter routing network is defined b
 composed by blocks of air that are distributed over the airspace. Air blocks are present in all locations with
 the exception of buildings and other restricted zones. The method used to achieve an efficient pathfinding
 algorithm will be inspired in the AirMatrix model. The following section further explains the model used.
+
+Visualization of drones operating in an urban airspace
+![](AIR_mobility_visualization.gif)
 
 
 # Cost map model
@@ -92,6 +78,10 @@ cost map, A* algorithm will return the path which has minimum intersection with 
 most cost-effective path.
 
 An explanation of A* algorithm and its implementation will be developed in further research.
+
+Visualization of the process of pathfinding
+![](AIR_mobility_pathfinding.gif)
+
 
 # Traffic congestion mitigation
 Traffic congestion is normally generated due to the high concentration of vehicles moving in chaotic directions.
