@@ -1,34 +1,43 @@
-import numpy as np
-np.random.seed(0)
+#-------------------------------#
+# Author:   Max Martinez Ruts
+# Creation: 2019
+# Description: Main (generates environment, calls the pathfinding search and runs the visualization simulation)
+#-------------------------------#
 
+# Import other scripts
+import numpy as np
 from environment import env
 from drone import Drone
 from order import Order
 from kitchen import Kitchen
 import visual as vs
 
+# Create list where positions and directions are going to be recorded
 for t in range(100000):
     env.pos_drones.append([])
-
-n_drones =  15
-n_kitchens = 3
+    env.dir_drones.append([])
 
 # Create environment (drones, and kitchens)
+n_drones = 20
+n_kitchens = 3
 for i in range(n_kitchens):
-    env.kitchens.append(Kitchen())
-
+    env.kitchens.append(Kitchen(i))
 for i in range(n_drones):
     env.drones.append(Drone())
+
 vs.draw()
 
+# Determine a path for all drones
 for drone in env.drones:
     drone.set_path()
     vs.draw()
     print(env.drones.index(drone))
+vs.initialize_3d()
 
 # Start and continue simulation
 while True:
-    env.tstep +=1
+    print(env.tstep)
+    # env.tstep +=1
     # Each 700 time steps create an order
     if env.tstep%7000 == 0:
 
@@ -46,7 +55,7 @@ while True:
                 if drone.is_available() and drone.kitchen == order.kitchen:
                     available_drones.append(drone)
 
-            if len(available_drones) > 0:
+            if len(available_drones) > 2:
                 np.random.choice(available_drones).take_order(order)
                 order.state = 'moving'
 
@@ -55,6 +64,6 @@ while True:
         drone.act()
 
     # Draw scene
-    vs.draw()
+    vs.show_result()
 
 

@@ -1,3 +1,9 @@
+# -------------------------------#
+# Author:   Max Martinez Ruts
+# Creation: 2019
+# Description: NOT used: own shortest path algorithm (turned out not to converge), although it is very fast
+# -------------------------------#
+
 import pygame
 from point import Point
 import numpy as np
@@ -14,9 +20,11 @@ class Graph:
 
         # Initialize path
         self.path = p
+        self.best = 100000000000000000
 
     # Search
     def search(self):
+
         self.creation()
         self.shifting()
         self.deletion()
@@ -33,18 +41,19 @@ class Graph:
 
             # Create a number of poits located in a 2D gaussian distribution located at the edge examined
             for k in range(int(len_edge)*10):
-                delta = np.random.randn(2)/len(self.path)*10
+                delta = np.random.randn(2)/len(self.path)*12
                 p = self.path[choice].pos + (self.path[choice+1].pos - self.path[choice].pos)/len_edge*np.random.uniform(0,len_edge) + delta
-                if not cm.intersects(p):
-                    # Substitude examined point by generated point, evaluate the new cost of the path and save
-                    path = list(self.path)
-                    path[choice] = Point(p)
-                    c = self.get_path_cost(path)
-                    cs.append(c)
-                    ps.append(p)
+                # if not cm.intersects(p):
+                # Substitude examined point by generated point, evaluate the new cost of the path and save
+                path = list(self.path)
+                path[choice] = Point(p)
+                c = self.get_path_cost(path)
+                cs.append(c)
+                ps.append(p)
 
             # Select shift operation that leads to the lowest cost
-            if len(cs) > 0:
+            if len(cs) > 0 and min(cs) < self.best:
+                self.best = min(cs)
                 pt = ps[cs.index(min(cs))]
                 path = list(self.path)
                 path[choice] = Point(pt)
@@ -68,19 +77,20 @@ class Graph:
 
             # Create a number of poits located in a 2D gaussian distribution located at the edge examined
             for k in range(int(len_edge)*10):
-                delta = np.random.randn(2)/len(self.path)*10
+                delta = np.random.randn(2)/len(self.path)*12
                 p = self.path[choice].pos + (self.path[choice+1].pos - self.path[choice].pos)/len_edge*np.random.uniform(0,len_edge) + delta
 
-                if not cm.intersects(p):
+                # if not cm.intersects(p):
                     # Create generated point, evaluate the new cost of the path and save
-                    path = list(self.path)
-                    path.insert(choice + 1, Point(p))
-                    c = self.get_path_cost(path)
-                    cs.append(c)
-                    ps.append(p)
+                path = list(self.path)
+                path.insert(choice + 1, Point(p))
+                c = self.get_path_cost(path)
+                cs.append(c)
+                ps.append(p)
 
             # Select creation operation that leads to the lowest cost
-            if len(cs) > 0:
+            if len(cs) > 0 and min(cs) < self.best:
+                self.best = min(cs)
                 path = list(self.path)
                 path.insert(choice + 1, Point(ps[cs.index(min(cs))]))
                 cps.append(self.get_path_cost(path))
@@ -103,12 +113,11 @@ class Graph:
             cs.append(cost)
 
         # Select point that lead to the lowest cost deletion operation delete it
-        if len(cs) > 0:
-            if min(cs) < self.get_path_cost(self.path):
-                choice = cs.index(min(cs)) + 1
-                self.path.pop(choice)
-                # print(min(cs), self.get_path_cost(self.path))
-                self.reconstruct_path(np.array([1, 1, 1], dtype=int))
+        if len(cs) > 0 and min(cs) < self.best:
+            self.best = min(cs)
+            choice = cs.index(min(cs)) + 1
+            self.path.pop(choice)
+            self.reconstruct_path(np.array([1, 1, 1], dtype=int))
 
     # Returns cost of complete path
     def get_path_cost(self, path):
@@ -123,7 +132,7 @@ class Graph:
             # Increase the time for next evaluation (velocity = 1/50, therefore time is 50 times space)
             t_path += np.linalg.norm(path[p].pos- path[p + 1].pos)*50
 
-        return cost
+        return cost/(t_path/50) + t_path/50
 
     def get_edge_cost(self, i, f, t_i):
 
@@ -131,7 +140,7 @@ class Graph:
         length = np.linalg.norm(vec)
 
         # Divide edge into shorter edges to increase evaluation resolution
-        reps = int(length / 0.5) + 2
+        reps = int(length / 0.2) + 2
         mults = np.linspace(0, 1, reps)
         cost = 0
         t_path = 0
@@ -140,11 +149,13 @@ class Graph:
             next = i + mults[j + 1] * vec
 
             # Establish weights of the start and end points by evaluation spatial and time-dependent cost
-            wi = cm.weights[hp.get_coor_by_pos(current)[0], hp.get_coor_by_pos(current)[1]] + cm.get_dynamic_w(current,int(t_i+t_path))
-            wf = cm.weights[hp.get_coor_by_pos(next)[0], hp.get_coor_by_pos(next)[1]] + cm.get_dynamic_w(next,int(t_i + t_path + np.linalg.norm(current-next)*50))
+            # wi = cm.weights[hp.get_coor_by_pos(current)[0], hp.get_coor_by_pos(current)[1]] + cm.get_dynamic_w(current,int(t_i+t_path))
+            # wf = cm.weights[hp.get_coor_by_pos(next)[0], hp.get_coor_by_pos(next)[1]] + cm.get_dynamic_w(next,int(t_i + t_path + np.linalg.norm(current-next)*50))
 
+            # wi =  cm.get_neighbour_cost(current,int(t_i + t_path))
+            # wf =  cm.get_neighbour_cost(next, int(t_i + t_path + np.linalg.norm(current - next) * 50))
             # Cost set to average of start and end weights * distance of edge
-            cost += (wi + wf) / 2 * np.linalg.norm(current - next)
+            cost += cm.get_neighbour_cost(current, next, int(t_i+t_path))*np.linalg.norm(current-next)
 
             # Increase the time for next evaluation (velocity = 1/50, therefore time is 50 times space)
             t_path += np.linalg.norm(next-current)*50
@@ -156,7 +167,8 @@ class Graph:
         vs.pygame.event.get()
         vs.draw()
         for p in range(len(self.path) - 1):
-            c = color * 255
+            print(self.best)
+            c = color * min(int(self.best),255)
             pygame.draw.line(vs.screen, c, vs.cartesian_to_screen(self.path[p].pos),
                              vs.cartesian_to_screen(self.path[p + 1].pos), 3)
             pygame.draw.circle(vs.screen, vs.white, vs.cartesian_to_screen(self.path[p].pos), 3)

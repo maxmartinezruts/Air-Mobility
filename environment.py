@@ -1,3 +1,9 @@
+#-------------------------------#
+# Author:   Max Martinez Ruts
+# Creation: 2019
+# Description: Describes state of the simulation, used by other scripts to facilitate acces to game objects
+#-------------------------------#
+
 # All environment parameters
 
 # Time of simulation
@@ -11,9 +17,12 @@ class Environment:
         self.orders = []
 
         # Grid refinement (Spatial grid is N * N)
-        self.n = 200
+        self.n = 100
+        self.m = 20
 
         # List containing all drones positions at all time
         self.pos_drones = []
+        self.dir_drones = []
+        self.paths = []
 
 env = Environment()
