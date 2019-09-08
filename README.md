@@ -1,4 +1,4 @@
-# Air-Mobility
+# Motivation
 
 With the world moving faster every day, the demand for services grows rapidly. In recent years we have
 seen a significant rise of interest in drone technology, as a means to allow our society to satisfy this demand.
@@ -18,10 +18,10 @@ section 5 give a more in-depth insight into different stages of the operation.
 
 # Urban airspace model
 In an urban environment, pathfinding (or routing) is a crucial task for delivery. Any drone has to be able to
-avoid known static and dynamic obstacles as well as unknown obstacles [11] [10]. Furthermore, not all areas
+avoid known static and dynamic obstacles as well as unknown obstacles. Furthermore, not all areas
 are accessible by the drone. The existence of geofenced areas, no-fly zones, known obstacles such as buildings
 or other drones limits the path possibilities of the drone and makes the pathfinding process convoluted.
-In [8], 3 air routing networks are presented: routing over buildings, routing over roads and free routing
+In previous literature, air routing networks are presented: routing over buildings, routing over roads and free routing
 with restricted zones such as buildings. The latter routing network is defined by creating an AirMatrix
 composed by blocks of air that are distributed over the airspace. Air blocks are present in all locations with
 the exception of buildings and other restricted zones. The method used to achieve an efficient pathfinding
@@ -111,10 +111,10 @@ that would simulate different clustering patters thorough three behaviours; alig
 
 Interestingly, these three behaviours align perfectly with the three concepts introduced in the paper mentioned earlier. Geofencing
 can be achieved by separation, which makes vehicles steer in opposite directions of obstacles encountered
-within a perception range (see Figure 7). Geocasting can be achieved by cohesion, which makes vehicles
-steer towards the average position of all other vehicles encountered in a perception range (see Figure 8).
+within a perception range (see Left Figure). Geocasting can be achieved by cohesion, which makes vehicles
+steer towards the average position of all other vehicles encountered in a perception range (see Center Figure).
 And geovectoring can be achieved by alignment, which makes vehicles steer towards the same direction as
-the average heading of all other vehicles encountered within a perception range (see Figure 9).
+the average heading of all other vehicles encountered within a perception range (see Right Figure).
 
 <p align="center">
   <img src="separation.png" width="200" alt="accessibility text">
@@ -122,7 +122,7 @@ the average heading of all other vehicles encountered within a perception range 
      <img src="alignment.png" width="200" title="hover text">
 </p>
 
-Left Separation 
+Left: Separation 
 Center: Cohesion
 Right: Alignment
 
