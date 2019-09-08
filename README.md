@@ -136,3 +136,14 @@ space and therefore, less congestion.
 By varying the weight on the cost map of separation, cohesion and alignment in the cost map, different
 clustering patters can be achieved, and adapted to the circumstances. For example, if separation is predominant, the limit radius can be increased, or if congestion has to be drastically reduced, more weight will be
 carried by cohesion and alignment such that geovectored clusters are formed.
+
+
+The following animations present simulations using the above explained both for an urban airspace and a clear airspace:
+
+Urban Airspace:
+![](urban_traffic.gif)
+
+Clear airspace:
+![](clear_traffic.gif)
+
+
